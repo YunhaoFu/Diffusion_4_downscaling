@@ -73,7 +73,7 @@ if __name__ == "__main__":
 
     logger.info(f"Train size: {len(train_data)}, Val size: {len(val_data)}.")
     train_loader = DataLoader(train_data, batch_size=configs.batch_size,shuffle=configs.use_shuffle, num_workers=configs.num_workers,drop_last=True)
-    val_loader = DataLoader(val_data, batch_size=int(configs.batch_size/12),shuffle=False, num_workers=configs.num_workers,drop_last=True)
+    val_loader = DataLoader(val_data, batch_size=1,shuffle=False, num_workers=configs.num_workers,drop_last=True)
     logger.info("Training and Validation dataloaders are ready.")
     # Defining the model.
     optimizer = get_optimizer(configs.optimizer_type)

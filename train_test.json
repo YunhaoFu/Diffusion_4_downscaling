@@ -10,7 +10,7 @@
         "resume_state":null
     },
     "data": {
-        "batch_size": 240,
+        "batch_size": 120,
         "num_workers": 6,
         "use_shuffle": true,
 	"height": 240
