@@ -256,7 +256,7 @@ class UNet(nn.Module):
 
     def __init__(self, in_channel: int, out_channel: int, inner_channel: int,
                  norm_groups: int, channel_mults: tuple, attn_res: tuple,
-                 res_blocks: int, dropout: float, with_noise_level_emb: bool = True, height: int = 128):
+                 res_blocks: int, dropout: float, with_noise_level_emb: bool = True, height: int = 240):
         super().__init__()
         self.out_channel=out_channel
         if with_noise_level_emb:

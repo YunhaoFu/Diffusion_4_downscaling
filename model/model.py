@@ -110,16 +110,16 @@ class DDPM(BaseModel):
         self.load_network()
         self.print_network()
         self.index_list = []
-        for i, i_start in enumerate(np.arange(0, 400, height)):
-            for j, j_start in enumerate(np.arange(0, 700, height)):
+        for i, i_start in enumerate(np.arange(0, 240, height)):
+            for j, j_start in enumerate(np.arange(0, 240, height)):
                 i_end = i_start + height
                 j_end = j_start + height
-                if i_end > 400:
-                    i_end = 400
-                    i_start=400-height
-                if j_end > 700:
-                    j_end = 700
-                    j_start=700-height
+                if i_end > 240:
+                    i_end = 240
+                    i_start=240-height
+                if j_end > 240:
+                    j_end = 240
+                    j_start=240-height
                 self.index_list.append((i_start, i_end, j_start, j_end))
 
     def feed_data(self, data: tuple) -> None:
@@ -174,8 +174,8 @@ class DDPM(BaseModel):
     
     def batch2patch(self,data,batch):
 
-        reconstructed_data = torch.zeros(size=(batch, 1, 400, 700)).to(data.device)
-        data_rec_mask = torch.zeros(size=(batch, 1, 400, 700)).to(data.device)
+        reconstructed_data = torch.zeros(size=(batch, 1, 240, 240)).to(data.device)
+        data_rec_mask = torch.zeros(size=(batch, 1, 240, 240)).to(data.device)
         for i in range(batch):
 
             temp_data=data[i*len(self.index_list):(i+1)*len(self.index_list),:,:,:]
@@ -189,8 +189,8 @@ class DDPM(BaseModel):
        
         return reconstructed_data
     def batch2patch_v2(self,data,batch):
-        reconstructed_data = torch.zeros(size=(batch, 1, 400, 700)).to(data.device)
-        data_rec_mask = torch.zeros(size=(batch, 1, 400, 700)).to(data.device)
+        reconstructed_data = torch.zeros(size=(batch, 1, 240, 240)).to(data.device)
+        data_rec_mask = torch.zeros(size=(batch, 1, 240, 240)).to(data.device)
         for i in range(batch):
 
             temp_data=data[i*len(self.index_list):(i+1)*len(self.index_list),:,:,:]

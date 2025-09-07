@@ -283,7 +283,10 @@ def normal(y_pred):
 def psnr(y_pred,y_true):
     y_pred=normal(y_pred)
     y_true=normal(y_true)
-    loss=10. * torch.log10(255. / torch.mean((y_pred - y_true) ** 2))
+# ---
+    # loss=10. * torch.log10(255. / torch.mean((y_pred - y_true) ** 2))
+# ---
+    loss=10. * torch.log10(255. / torch.mean((y_pred - y_true) ** 2 + 1e-8))
     return loss
 
 

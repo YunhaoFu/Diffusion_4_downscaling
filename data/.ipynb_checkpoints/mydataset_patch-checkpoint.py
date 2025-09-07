@@ -66,16 +66,16 @@ class SR3_Dataset_train(torch.utils.data.Dataset):
 class SR3_Dataset_val_new(torch.utils.data.Dataset):
     def __init__(self,hr_paths,land_paths,mask_paths,lr_paths,var,patch_size,loc):
         index_list = []
-        for i, i_start in enumerate(np.arange(0, 400, patch_size)):
-            for j, j_start in enumerate(np.arange(0, 700, patch_size)):
+        for i, i_start in enumerate(np.arange(0, 240, patch_size)):
+            for j, j_start in enumerate(np.arange(0, 240, patch_size)):
                 i_end = i_start + patch_size
                 j_end = j_start + patch_size
-                if i_end > 400:
-                    i_end = 400
-                    i_start=400-128
-                if j_end > 700:
-                    j_end = 700
-                    j_start=700-128
+                if i_end > 240:
+                    i_end = 240
+                    i_start=240-240
+                if j_end > 240:
+                    j_end = 240
+                    j_start=240-240
                 index_list.append((i_start, i_end, j_start, j_end))
         loc_dict={}
         for i,index in enumerate(index_list):
@@ -291,9 +291,9 @@ if __name__ == '__main__':
     train_index=np.delete(data_index,random_dataset_index)
 
     print(f"split_random dataset is {random_dataset_index}" )
-    train_data = SR3_Dataset_train(np.array(target_paths)[train_index],land_01_path,mask_path,np.array(data_paths)[train_index],'tp',patch_size=128)
+    train_data = SR3_Dataset_train(np.array(target_paths)[train_index],land_01_path,mask_path,np.array(data_paths)[train_index],'tp',patch_size=240)
 
-    # val_data=SR3_Dataset_val(np.array(target_paths)[random_dataset_index],land_01_path,mask_path,np.array(data_paths)[random_dataset_index],'tp',patch=128)
+    # val_data=SR3_Dataset_val(np.array(target_paths)[random_dataset_index],land_01_path,mask_path,np.array(data_paths)[random_dataset_index],'tp',patch=240)
     val_data=SR3_Dataset_val(np.array(target_paths)[random_dataset_index],land_01_path,mask_path,np.array(data_paths)[random_dataset_index],'tp')
     # dataset = Control_Dataset_val(target_paths,land_01_path,mask_path,physical_paths)
 

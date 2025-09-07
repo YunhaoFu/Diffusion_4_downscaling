@@ -10,81 +10,65 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 import random
 
-class SR3_Dataset_patch(torch.utils.data.Dataset):
-    def __init__(self,hr_paths,land_paths,mask_paths,lr_paths,var,patch_size):
+
+class SR3_Dataset(torch.utils.data.Dataset):
+    def __init__(self,var):
+
+        path_tmp = "/gpu/hanwei/fyh"
+        hr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)
+        lr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)
+        land_paths = f"{path_tmp}/land.npy"#        C(1), H(240), W(240)
+        mask_paths = f"{path_tmp}/mask.npy"#        C(1), H(240), W(240)
+        self.max = np.load(f"{path_tmp}/state_max.npy")
+        self.min = np.load(f"{path_tmp}/state_min.npy")
+
         var_list={"u":0,"v":1,"t2m":2,"sp":3,"tp":4,}
         index_var=var_list[var]
         self.variable_name=var
-        # for path1,path2 in zip(hr_paths,physical_paths):
-        #     print(path1,path2)
-        self.target_hr = [np.load(path, mmap_mode='r+').transpose(0,3,1,2)[:,index_var:index_var+1] for path in hr_paths]
-        self.target_lr = [np.load(path, mmap_mode='r+').transpose(0,3,1,2)[:,index_var:index_var+1] for path in lr_paths]
-       
+        self.target_hr = np.load(hr_paths)[:,index_var:index_var+1,:,:] # N(16), C(1), H(240), W(240)
+        self.target_lr = np.load(lr_paths)[:,index_var:index_var+1,:,:] # N(16), C(1), H(240), W(240)
         #[0,2,4,6,8]# 500 zrtuv #[6,8,4,0,2]u v t z r
-        self.land_01=np.expand_dims(np.load(land_paths, mmap_mode='r+'),axis=0)
-        self.mask_data=np.expand_dims(np.load(mask_paths, mmap_mode='r+'),axis=0)
-        self.start_indices = [0] * len(self.target_hr)
-        self.data_count = 0  
-        # self.scale=scale
-        self.patch_size=patch_size
-        for index, memmap in enumerate(self.target_hr):
-            self.start_indices[index] = self.data_count
-            self.data_count += memmap.shape[0]
-        self.max = torch.from_numpy(np.load("/home/data/downscaling/downscaling_1023/data/train_dataset/max_new_10.npy", mmap_mode='r+')).float()
-        self.min = torch.from_numpy(np.load("/home/data/downscaling/downscaling_1023/data/train_dataset/min_new_10.npy", mmap_mode='r+')).float()
+        self.land_01 = np.load(land_paths) / 1e3                        #        C(1), H(240), W(240)
+        self.mask_data = np.load(mask_paths)                            #        C(1), H(240), W(240)
+        self.start_indices = [0]
+        self.data_count = self.target_hr.shape[0]
         # print(self.max.shape)
-    def normal_max_min(self,data,iy,ix,ip):
+    def normal_max_min(self,data):
         var_list={"u":0,"v":1,"t2m":2,"sp":3,"tp":4,}
         index_var=var_list[self.variable_name]
 
-        max_=self.max[index_var:index_var+1,iy:iy + ip, ix:ix + ip] 
-        min_=self.min[index_var:index_var+1,iy:iy + ip, ix:ix + ip]
+        max_=self.max[index_var:index_var+1]             #  C(1), H(240), W(240)
+        min_=self.min[index_var:index_var+1]             #  C(1), H(240), W(240)
 
         # print(max_.max(),max_.min())
         # print((max_-min_).max(),(max_-min_).min())
-        return (data-min_)/(max_-min_+1e-6)
+        denom = (max_ - min_).clip(min=1e-6)
+        return (data - min_) / denom
+
     def get_patch(self,hr,mask,hr_land,lr_inter):
 
-        ih_hr, iw_hr = hr.shape[1:]
-        ip=self.patch_size
-        ix = random.randrange(0, iw_hr - ip + 1)
-        iy = random.randrange(0, ih_hr - ip + 1)
-        mask_data=torch.from_numpy(mask[:,iy:iy + ip, ix:ix + ip]).float()
-        land_data=torch.from_numpy(hr_land[:,iy:iy + ip, ix:ix + ip]).float()
        
-        if self.variable_name in ["u","v","t2m","sp"]:
-            lr_data=self.normal_max_min(lr_inter[:,iy:iy + ip, ix:ix + ip].float(),iy,ix,ip)
-            ret = {
-            "HR":self.normal_max_min(torch.from_numpy(hr[:,iy:iy + ip, ix:ix + ip]).float(),iy,ix,ip),
-            "mask":mask_data,
-            "INTERPOLATED":torch.cat([lr_data,mask_data,land_data],axis=0),
-            "LAND":land_data
-            }
-        else:
-            lr_data=lr_inter[:,iy:iy + ip, ix:ix + ip].float()
-            ret = {
-            "HR":torch.from_numpy(hr[:,iy:iy + ip, ix:ix + ip]).float(),
-            "mask":mask_data,
-            "INTERPOLATED":torch.cat([lr_data,mask_data,land_data],axis=0),
-            "LAND":land_data
-            }
+        mask_t  = torch.from_numpy(mask).float()          # (1, 240, 240)
+        land_t  = torch.from_numpy(hr_land).float()       # (1, 240, 240)
+        hr_t = torch.from_numpy(self.normal_max_min(hr)).float()         # (1, 240, 240)
+        lr_t = torch.from_numpy(self.normal_max_min(lr_inter)).float()     # (1, 240, 240)
 
+        ret = {
+            "HR": hr_t,
+            "mask": mask_t,
+            "INTERPOLATED": torch.cat([lr_t, mask_t, land_t], dim=0),  # (3, 240, 240)
+            "LAND": land_t
+        }
         return ret
 
     def __len__(self):
         return self.data_count
 
     def __getitem__(self, index):
-        memmap_index = bisect(self.start_indices, index) - 1
-        index_in_memmap = index - self.start_indices[memmap_index]
-
         land_01_data=self.land_01
         mask_data=self.mask_data
-        hr_target = self.target_hr[memmap_index][index_in_memmap]*mask_data
-        if self.variable_name=='tp':
-            lr_inter=interpolate(torch.from_numpy(np.expand_dims(self.target_lr[memmap_index][index_in_memmap],axis=0)).float(),scale_factor=10, mode="bilinear").squeeze(0)*mask_data
-        else:
-            lr_inter=interpolate(torch.from_numpy(np.expand_dims(self.target_lr[memmap_index][index_in_memmap],axis=0)).float(),scale_factor=10, mode="bicubic").squeeze(0)*mask_data
+        hr_target = self.target_hr[index]*mask_data
+        lr_inter = self.target_lr[index]*mask_data
         return self.get_patch(hr_target,mask_data,land_01_data,lr_inter)
 
 
@@ -92,16 +76,16 @@ class SR3_Dataset_patch(torch.utils.data.Dataset):
 class SR3_Dataset_finetune_patch(torch.utils.data.Dataset):
     def __init__(self,hr_paths,land_paths,mask_paths,lr_paths,var,patch_size):
         index_list = []
-        for i, i_start in enumerate(np.arange(0, 400, patch_size)):
-            for j, j_start in enumerate(np.arange(0, 700, patch_size)):
+        for i, i_start in enumerate(np.arange(0, 240, patch_size)):
+            for j, j_start in enumerate(np.arange(0, 240, patch_size)):
                 i_end = i_start + patch_size
                 j_end = j_start + patch_size
-                if i_end > 400:
-                    i_end = 400
-                    i_start=400-128
-                if j_end > 700:
-                    j_end = 700
-                    j_start=700-128
+                if i_end > 240:
+                    i_end = 240
+                    i_start=240-240
+                if j_end > 240:
+                    j_end = 240
+                    j_start=240-240
                 index_list.append((i_start, i_end, j_start, j_end))
         self.loc_dict={}
         for i,index in enumerate(index_list):
@@ -187,16 +171,16 @@ class SR3_Dataset_finetune_patch(torch.utils.data.Dataset):
 # class SR3_Dataset_val_new(torch.utils.data.Dataset):
 #     def __init__(self,hr_paths,land_paths,mask_paths,lr_paths,var,patch_size,loc):
 #         index_list = []
-#         for i, i_start in enumerate(np.arange(0, 400, patch_size)):
-#             for j, j_start in enumerate(np.arange(0, 700, patch_size)):
+#         for i, i_start in enumerate(np.arange(0, 240, patch_size)):
+#             for j, j_start in enumerate(np.arange(0, 240, patch_size)):
 #                 i_end = i_start + patch_size
 #                 j_end = j_start + patch_size
-#                 if i_end > 400:
-#                     i_end = 400
-#                     i_start=400-128
-#                 if j_end > 700:
-#                     j_end = 700
-#                     j_start=700-128
+#                 if i_end > 240:
+#                     i_end = 240
+#                     i_start=240-240
+#                 if j_end > 240:
+#                     j_end = 240
+#                     j_start=240-240
 #                 index_list.append((i_start, i_end, j_start, j_end))
 #         loc_dict={}
 #         for i,index in enumerate(index_list):
@@ -314,16 +298,16 @@ class SR3_Dataset_all(torch.utils.data.Dataset):
 class SR3_Dataset_test(torch.utils.data.Dataset):
     def __init__(self,land_paths,mask_paths,lr_paths,var,patch_size,loc):
         index_list = []
-        for i, i_start in enumerate(np.arange(0, 400, patch_size)):
-            for j, j_start in enumerate(np.arange(0, 700, patch_size)):
+        for i, i_start in enumerate(np.arange(0, 240, patch_size)):
+            for j, j_start in enumerate(np.arange(0, 240, patch_size)):
                 i_end = i_start + patch_size
                 j_end = j_start + patch_size
-                if i_end > 400:
-                    i_end = 400
-                    i_start=400-128
-                if j_end > 700:
-                    j_end = 700
-                    j_start=700-128
+                if i_end > 240:
+                    i_end = 240
+                    i_start=240-240
+                if j_end > 240:
+                    j_end = 240
+                    j_start=240-240
                 index_list.append((i_start, i_end, j_start, j_end))
         loc_dict={}
         for i,index in enumerate(index_list):

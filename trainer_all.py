@@ -11,7 +11,7 @@ from torch.nn.functional import mse_loss, l1_loss
 from torch.utils.data import DataLoader
 import model
 # from x2_data.mydataset_patch import BigDataset_train
-from data.mydataset_patch import SR3_Dataset_patch
+from data.mydataset_patch import SR3_Dataset
 from configs import Config
 import matplotlib  
 import matplotlib.pyplot as plt 
@@ -47,21 +47,33 @@ if __name__ == "__main__":
     tb_logger = SummaryWriter(log_dir=configs.tb_logger)
 
     
-    target_paths = sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/hr/*npy")) 
-    land_01_path="/home/data/downscaling/downscaling_1023/data/land10.npy"
-    mask_path="/home/data/downscaling/downscaling_1023/data/mask10.npy"
-    # physical_paths= sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/pl/*npy"))
-    lr_paths= sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/sl/*npy"))
-    random_dataset_index= random.sample(range(0, len(target_paths)), 2)
-    data_index=np.arange(0,len(target_paths))
-    train_index=np.delete(data_index,random_dataset_index)
-    logger.info(f"split_random dataset is {random_dataset_index}" )
-    train_data = SR3_Dataset_patch(np.array(target_paths)[train_index],land_01_path,mask_path,lr_paths=np.array(lr_paths)[train_index],var=variable_name,patch_size=configs.height)
-    val_data=SR3_Dataset_patch(np.array(target_paths)[random_dataset_index],land_01_path,mask_path,lr_paths=np.array(lr_paths)[random_dataset_index],var=variable_name,patch_size=configs.height)
+# ---
+    # target_paths = sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/hr/*npy")) 
+    # land_01_path="/home/data/downscaling/downscaling_1023/data/land10.npy"
+    # mask_path="/home/data/downscaling/downscaling_1023/data/mask10.npy"
+    # # physical_paths= sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/pl/*npy"))
+    # lr_paths= sorted(glob.glob("/home/data/downscaling/downscaling_1023/data/train_dataset/sl/*npy"))
+    # random_dataset_index= random.sample(range(0, len(target_paths)), 2)
+    # data_index=np.arange(0,len(target_paths))
+    # train_index=np.delete(data_index,random_dataset_index)
+    # logger.info(f"split_random dataset is {random_dataset_index}" )
+    # train_data = SR3_Dataset_patch(np.array(target_paths)[train_index],land_01_path,mask_path,lr_paths=np.array(lr_paths)[train_index],var=variable_name,patch_size=configs.height)
+    # val_data=SR3_Dataset_patch(np.array(target_paths)[random_dataset_index],land_01_path,mask_path,lr_paths=np.array(lr_paths)[random_dataset_index],var=variable_name,patch_size=configs.height)
+# ---
+# +++
+    full_ds = SR3_Dataset(var=variable_name)
+    val_idx   = random.sample(range(len(full_ds)), 2)
+    train_idx = [i for i in range(len(full_ds)) if i not in val_idx]
+
+    train_data = torch.utils.data.Subset(full_ds, train_idx)
+    val_data   = torch.utils.data.Subset(full_ds, val_idx)
+
+    logger.info(f"split_random dataset is {val_idx}")
+# +++
 
     logger.info(f"Train size: {len(train_data)}, Val size: {len(val_data)}.")
     train_loader = DataLoader(train_data, batch_size=configs.batch_size,shuffle=configs.use_shuffle, num_workers=configs.num_workers,drop_last=True)
-    val_loader = DataLoader(val_data, batch_size=np.int(configs.batch_size/12),shuffle=False, num_workers=configs.num_workers,drop_last=True)
+    val_loader = DataLoader(val_data, batch_size=int(configs.batch_size/12),shuffle=False, num_workers=configs.num_workers,drop_last=True)
     logger.info("Training and Validation dataloaders are ready.")
     # Defining the model.
     optimizer = get_optimizer(configs.optimizer_type)
