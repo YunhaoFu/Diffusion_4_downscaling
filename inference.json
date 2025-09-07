@@ -7,10 +7,10 @@
         "tb_logger": "tb_logger",
         "results": "results",
         "checkpoint": "checkpoint",
-        "resume_state": null
+        "resume_state": "/gpu/hanwei/fyh/experiments/era5_test_250907_140100/checkpoint/I10000_E1667"
     },
     "data": {
-        "batch_size": 240,
+        "batch_size": 120,
         "num_workers": 6,
         "use_shuffle": true,
 	"height": 240
