@@ -24,6 +24,7 @@ warnings.filterwarnings("ignore")
 
 
 def generate_ens(ddim_steps):
+    # todo root_dir
     path_tmp = "/gpu/hanwei/fyh"
 
     max_normal = np.load(f"{path_tmp}/state_max.npy")[list_idx]

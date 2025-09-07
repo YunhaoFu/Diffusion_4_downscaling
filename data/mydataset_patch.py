@@ -14,6 +14,7 @@ import random
 class SR3_Dataset(torch.utils.data.Dataset):
     def __init__(self,var):
 
+        # todo root_dir
         path_tmp = "/gpu/hanwei/fyh"
         hr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)
         lr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)

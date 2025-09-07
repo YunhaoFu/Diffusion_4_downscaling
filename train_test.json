@@ -33,7 +33,7 @@
                 "schedule": "cosine",
                 "n_timestep": 1000,
                 "linear_start": 1e-6,
-		    "linear_end": 1e-3
+		        "linear_end": 1e-3
             },
             "val": {
                 "schedule": "cosine",

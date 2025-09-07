@@ -150,6 +150,8 @@ class Config:
         self.lr = self.params["training"]["optimizer"]["lr"]
 
     def __parse_configs(self):
+        # todo root_dir
+        path_tmp = "/gpu/hanwei/fyh"+"/experiments"
         """Reads configureation json file and stores in params attribute."""
         json_str = ""
         with open(self.root, "r") as f:
@@ -159,7 +161,7 @@ class Config:
         self.params = json.loads(json_str, object_pairs_hook=OrderedDict)
 
         if not self.params["path"]["resume_state"]:
-            self.experiments_root = os.path.join("experiments", f"{self.params['name']}_{get_current_datetime()}")
+            self.experiments_root = os.path.join(path_tmp, f"{self.params['name']}_{get_current_datetime()}")
         else:
             self.experiments_root = "/".join(self.params["path"]["resume_state"].split("/")[:-2])
 
