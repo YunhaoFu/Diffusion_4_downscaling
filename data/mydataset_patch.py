@@ -16,12 +16,12 @@ class SR3_Dataset(torch.utils.data.Dataset):
 
         # todo root_dir
         path_tmp = "/gpu/hanwei/fyh"
-        hr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)
-        lr_paths   = f"{path_tmp}/state.npy" # N(16), C(5), H(240), W(240)
-        land_paths = f"{path_tmp}/land.npy"#        C(1), H(240), W(240)
-        mask_paths = f"{path_tmp}/mask.npy"#        C(1), H(240), W(240)
-        self.max = np.load(f"{path_tmp}/state_max.npy")
-        self.min = np.load(f"{path_tmp}/state_min.npy")
+        hr_paths   = f"{path_tmp}/state.npy"             # N(16), C(5), H(240), W(240)
+        lr_paths   = f"{path_tmp}/state.npy"             # N(16), C(5), H(240), W(240)
+        land_paths = f"{path_tmp}/land.npy"              #        C(1), H(240), W(240)
+        mask_paths = f"{path_tmp}/mask.npy"              #        C(1), H(240), W(240)
+        self.max = np.load(f"{path_tmp}/state_max.npy")  #        C(1), H(240), W(240)
+        self.min = np.load(f"{path_tmp}/state_min.npy")  #        C(1), H(240), W(240)
 
         var_list={"u":0,"v":1,"t2m":2,"sp":3,"tp":4,}
         index_var=var_list[var]
