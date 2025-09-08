@@ -44,7 +44,7 @@ if __name__ == "__main__":
     logger = logging.getLogger("base")
     val_logger = logging.getLogger("val")
     logger.info(dict2str(configs.get_hyperparameters_as_dict()))
-    tb_logger = SummaryWriter(log_dir=configs.tb_logger)
+    tb_logger = SummaryWriter(log_dir=configs.tb_logger) # modification for testing gitee
 
     
 # ---
