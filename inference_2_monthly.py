@@ -85,24 +85,41 @@ def generate_ens(ddim_steps):
              "latitude": y,
              "longitude":x}
              )
-    dataset_new.to_netcdf(result_path+"/"+"single_results/predict.nc")
-    # np.save(result_path+"/"+f"single_results/predict_{year}_{locs}_.npy",new_data)
+    dataset_new.to_netcdf(result_path+"/DETERMINISTIC.nc")
     print(new_member_data.shape)
     if need_member:
         dataset_new=xr.Dataset({
         variable_name:(["member","time", "latitude", "longitude"],new_member_data[:,:,:,:]) ,#if tp need exp
-        # "v10":(["time", "latitude", "longitude"], new_data[:,1,:,:]),
-        # "t2m":(["time", "latitude", "longitude"], new_data[:,2,:,:]),
-        # "sp":(["time", "latitude", "longitude"], new_data[:,3,:,:]),
-        # "tp":(["time", "latitude", "longitude"], np.exp(new_data[:,4,:,:])-1),
                               },
                               coords={"member":np.arange(sample_size),
                               "time":t,
              "latitude":y,
              "longitude":x}
              )
-        dataset_new.to_netcdf(result_path+"/"+"multi_member/predict.nc")
-        # np.save(result_path+"/"+f"multi_member/predict_{year}_{locs}_.npy",new_member_data)
+        dataset_new.to_netcdf(result_path+"/STOCHASTIC_RAW.nc")
+
+        tmpv = np.mean(new_member_data, axis=0)
+        dataset_new=xr.Dataset({
+        variable_name:(["time", "latitude", "longitude"],tmpv[:,:,:]) ,
+                              },
+                              coords={
+                              "time":t,
+                              "latitude":y,
+                              "longitude":x}
+             )
+        dataset_new.to_netcdf(result_path+"/STOCHASTIC_MEAN.nc")
+
+        tmpv = np.std(new_member_data, axis=0, ddof=1)
+        dataset_new=xr.Dataset({
+        variable_name:(["time", "latitude", "longitude"],tmpv[:,:,:]) ,
+                              },
+                              coords={
+                              "time":t,
+                              "latitude":y,
+                              "longitude":x}
+             )
+        dataset_new.to_netcdf(result_path+"/STOCHASTIC_STD1.nc")
+
     val_logger.info(f"member data is finished.")
 
 if __name__ == "__main__":
