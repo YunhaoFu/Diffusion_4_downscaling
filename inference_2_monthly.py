@@ -88,15 +88,15 @@ def generate_ens(ddim_steps):
     dataset_new.to_netcdf(result_path+"/DETERMINISTIC.nc")
     print(new_member_data.shape)
     if need_member:
-        dataset_new=xr.Dataset({
-        variable_name:(["member","time", "latitude", "longitude"],new_member_data[:,:,:,:]) ,#if tp need exp
-                              },
-                              coords={"member":np.arange(sample_size),
-                              "time":t,
-             "latitude":y,
-             "longitude":x}
-             )
-        dataset_new.to_netcdf(result_path+"/STOCHASTIC_RAW.nc")
+        # dataset_new=xr.Dataset({
+        # variable_name:(["member","time", "latitude", "longitude"],new_member_data[:,:,:,:]) ,#if tp need exp
+        #                       },
+        #                       coords={"member":np.arange(sample_size),
+        #                       "time":t,
+        #      "latitude":y,
+        #      "longitude":x}
+        #      )
+        # dataset_new.to_netcdf(result_path+"/STOCHASTIC_RAW.nc")
 
         tmpv = np.mean(new_member_data, axis=0)
         dataset_new=xr.Dataset({
